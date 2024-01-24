@@ -6,20 +6,23 @@ namespace Kaiseki\WordPress\MenuQuickSearchTitleOnly;
 
 use Kaiseki\WordPress\Hook\HookCallbackProviderInterface;
 
-use function add_action;
+use function array_map;
+use function in_array;
+use function is_string;
 
-final class FeatureName implements HookCallbackProviderInterface
+final class UpdateRequest implements HookCallbackProviderInterface
 {
-    /**
-     * @param list<string> $postTypes
-     */
+    /** @var list<string> */
     private array $postTypes;
 
+    /**
+     * @param list<string> $postTypes
+     * @param int          $postsPerPage
+     */
     public function __construct(
         array $postTypes = [],
         private readonly int $postsPerPage = 100,
-    )
-    {
+    ) {
         $this->postTypes = array_map(
             static fn (string $postType) => 'quick-search-posttype-' . $postType,
             $postTypes
@@ -28,7 +31,7 @@ final class FeatureName implements HookCallbackProviderInterface
 
     public function registerHookCallbacks(): void
     {
-        add_action('pre_get_posts', [$this, 'preGetPosts'], 1, 2);
+        add_action('pre_get_posts', [$this, 'preGetPosts'], 1);
     }
 
     public function preGetPosts(\WP_Query $q): void
@@ -42,11 +45,13 @@ final class FeatureName implements HookCallbackProviderInterface
         add_filter('posts_where', [$this, 'updateWhereClause'], 10, 2);
     }
 
-    public function updateWhereClause(string $where, \WP_Query $wp_query)
+    public function updateWhereClause(string $where, \WP_Query $wpQuery): string
     {
         global $wpdb;
-        if ($search_term = $wp_query->get('search_post_title')) {
-            $where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'%' . esc_sql($wpdb->esc_like($search_term)) . '%\'';
+        $searchTerm = $wpQuery->get('search_post_title');
+        if (is_string($searchTerm) && $searchTerm !== '') {
+            $like = '%' . esc_sql((string)$wpdb->esc_like($searchTerm)) . '%';
+            $where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'' . $like . '\'';
         }
         remove_filter('posts_where', [$this, 'title_filter']);
         return $where;
@@ -66,13 +71,8 @@ final class FeatureName implements HookCallbackProviderInterface
             return true;
         }
 
-        if (
-            !isset($_POST['type'])
-            || !in_array($_POST['type'], $this->postTypes)
-        ) {
-            return false;
-        }
-
-        return true;
+        return
+            isset($_POST['type'])
+            && in_array($_POST['type'], $this->postTypes, true);
     }
 }

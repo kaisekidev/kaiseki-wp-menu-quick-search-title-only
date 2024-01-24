@@ -17,13 +17,13 @@ final class ConfigProvider
             ],
             'hook' => [
                 'provider' => [
-                    FeatureName::class,
-                ]
+                    UpdateRequest::class,
+                ],
             ],
             'dependencies' => [
                 'aliases' => [],
                 'factories' => [
-                    FeatureName::class => FeatureNameFactory::class,
+                    UpdateRequest::class => UpdateRequestFactory::class,
                 ],
             ],
         ];
