@@ -13,10 +13,10 @@ final class UpdateRequestFactory
     {
         $config = Config::get($container);
         /** @var list<string> $postTypes */
-        $postTypes = $config->array('menu_quick_search_title_only/post_types');
+        $postTypes = $config->array('menu_quick_search_title_only/post_types', []);
         return new UpdateRequest(
             $postTypes,
-            $config->int('menu_quick_search_title_only/posts_per_page')
+            $config->int('menu_quick_search_title_only/posts_per_page', 20)
         );
     }
 }

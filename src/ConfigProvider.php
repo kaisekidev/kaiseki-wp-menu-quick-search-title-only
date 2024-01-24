@@ -12,8 +12,9 @@ final class ConfigProvider
     public function __invoke(): array
     {
         return [
-            'package_name' => [
-                'feature_notice' => 'foo',
+            'menu_quick_search_title_only' => [
+                'post_types' => [],
+                'posts_per_page' => 20,
             ],
             'hook' => [
                 'provider' => [
