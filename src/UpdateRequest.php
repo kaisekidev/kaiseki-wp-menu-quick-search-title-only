@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Kaiseki\WordPress\MenuQuickSearchTitleOnly;
 
-use Kaiseki\WordPress\Hook\HookCallbackProviderInterface;
+use Kaiseki\WordPress\Hook\HookProviderInterface;
+use WP_Query;
 
+use function add_action;
+use function add_filter;
 use function array_map;
+use function esc_sql;
 use function in_array;
 use function is_string;
+use function remove_filter;
 
-final class UpdateRequest implements HookCallbackProviderInterface
+final class UpdateRequest implements HookProviderInterface
 {
     /** @var list<string> */
     private array $postTypes;
@@ -24,17 +29,17 @@ final class UpdateRequest implements HookCallbackProviderInterface
         private readonly int $postsPerPage = 100,
     ) {
         $this->postTypes = array_map(
-            static fn (string $postType) => 'quick-search-posttype-' . $postType,
+            static fn(string $postType) => 'quick-search-posttype-' . $postType,
             $postTypes
         );
     }
 
-    public function registerHookCallbacks(): void
+    public function addHooks(): void
     {
         add_action('pre_get_posts', [$this, 'preGetPosts'], 1);
     }
 
-    public function preGetPosts(\WP_Query $q): void
+    public function preGetPosts(WP_Query $q): void
     {
         if (!$this->isRelevantPostRequest()) {
             return;
@@ -45,7 +50,7 @@ final class UpdateRequest implements HookCallbackProviderInterface
         add_filter('posts_where', [$this, 'updateWhereClause'], 10, 2);
     }
 
-    public function updateWhereClause(string $where, \WP_Query $wpQuery): string
+    public function updateWhereClause(string $where, WP_Query $wpQuery): string
     {
         global $wpdb;
         $searchTerm = $wpQuery->get('search_post_title');
@@ -54,6 +59,7 @@ final class UpdateRequest implements HookCallbackProviderInterface
             $where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'' . $like . '\'';
         }
         remove_filter('posts_where', [$this, 'title_filter']);
+
         return $where;
     }
 
