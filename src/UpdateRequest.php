@@ -6,6 +6,7 @@ namespace Kaiseki\WordPress\MenuQuickSearchTitleOnly;
 
 use Kaiseki\WordPress\Hook\HookProviderInterface;
 use WP_Query;
+use wpdb;
 
 use function add_action;
 use function add_filter;
@@ -53,9 +54,12 @@ final class UpdateRequest implements HookProviderInterface
     public function updateWhereClause(string $where, WP_Query $wpQuery): string
     {
         global $wpdb;
+        if (!$wpdb instanceof wpdb) {
+            return $where;
+        }
         $searchTerm = $wpQuery->get('search_post_title');
         if (is_string($searchTerm) && $searchTerm !== '') {
-            $like = '%' . esc_sql((string)$wpdb->esc_like($searchTerm)) . '%';
+            $like = '%' . esc_sql($wpdb->esc_like($searchTerm)) . '%';
             $where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'' . $like . '\'';
         }
         remove_filter('posts_where', [$this, 'title_filter']);
@@ -67,7 +71,7 @@ final class UpdateRequest implements HookProviderInterface
     {
         if (
             !isset($_POST['action'])
-            || $_POST['action'] !== "menu-quick-search"
+            || $_POST['action'] !== 'menu-quick-search'
             || !isset($_POST['q'])
         ) {
             return false;
