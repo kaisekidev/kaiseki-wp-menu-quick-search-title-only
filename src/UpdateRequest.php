@@ -54,7 +54,7 @@ final class UpdateRequest implements HookProviderInterface
     public function updateWhereClause(string $where, WP_Query $wpQuery): string
     {
         global $wpdb;
-        if (!$wpdb instanceof wpdb) {
+        if (!($wpdb instanceof wpdb)) {
             return $where;
         }
         $searchTerm = $wpQuery->get('search_post_title');
@@ -62,7 +62,7 @@ final class UpdateRequest implements HookProviderInterface
             $like = '%' . esc_sql($wpdb->esc_like($searchTerm)) . '%';
             $where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'' . $like . '\'';
         }
-        remove_filter('posts_where', [$this, 'title_filter']);
+        remove_filter('posts_where', [$this, 'updateWhereClause']);
 
         return $where;
     }

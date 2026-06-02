@@ -29,3 +29,6 @@ First tagged release.
 - PHPStan 2 (level max): `updateWhereClause` now narrows the `$wpdb` global with an `instanceof wpdb`
   guard (returning the unchanged `WHERE` clause when unavailable) and drops a redundant `(string)`
   cast on `esc_like()`. No behaviour change for valid quick-search requests.
+- `updateWhereClause` removed a non-existent `title_filter` callback instead of itself, so the
+  title `LIKE` clause leaked into later `posts_where` queries on the same request; it now removes
+  `updateWhereClause`, making the filter genuinely one-shot.
